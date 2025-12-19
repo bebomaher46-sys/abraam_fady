@@ -58,13 +58,14 @@ th{background:#0f2027;color:#fff}
 <div id="pharmacy" class="section">
 <h1>إدارة الصيدلية</h1>
 <div id="medsGrid" class="meds-grid">
-<div class="med-item" data-name="Panadol" data-price="25">💊 Panadol (25)</div>
-<div class="med-item" data-name="Vitamin C" data-price="15">💊 Vitamin C (15)</div>
-<div class="med-item" data-name="Brufen" data-price="22">💊 Brufen (22)</div>
-<div class="med-item" data-name="Aspirin" data-price="12.5">💊 Aspirin (12.5)</div>
-<div class="med-item" data-name="Augmentin" data-price="55">💊 Augmentin (55)</div>
-<div class="med-item" data-name="Zinc" data-price="18">💊 Zinc (18)</div>
+<div class="med-item" data-name="Panadol" data-price="25" onclick="selectMed(this)">💊 Panadol (25)</div>
+<div class="med-item" data-name="Vitamin C" data-price="15" onclick="selectMed(this)">💊 Vitamin C (15)</div>
+<div class="med-item" data-name="Brufen" data-price="22" onclick="selectMed(this)">💊 Brufen (22)</div>
+<div class="med-item" data-name="Aspirin" data-price="12.5" onclick="selectMed(this)">💊 Aspirin (12.5)</div>
+<div class="med-item" data-name="Augmentin" data-price="55" onclick="selectMed(this)">💊 Augmentin (55)</div>
+<div class="med-item" data-name="Zinc" data-price="18" onclick="selectMed(this)">💊 Zinc (18)</div>
 </div>
+<div id="medInfo" class="med-info">اختر دواء لعرض التفاصيل هنا</div>
 </div>
 <div id="billing" class="section">
 <h1>إنشاء فاتورة</h1>
@@ -72,79 +73,64 @@ th{background:#0f2027;color:#fff}
 <select id="doctorSelect"></select>
 <h3>اختيار الأدوية</h3>
 <div id="billingMedsGrid" class="meds-grid"></div>
-<div id="medInfo" class="med-info">اختر دواء لعرض التفاصيل هنا</div>
 <button class="btn btn-success" onclick="createInvoice()">إنشاء فاتورة</button>
 <div id="invoices"></div>
 </div>
 </div>
 <script>
 function randomTime(){
-  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-  const hours = ["08:00AM","09:00AM","10:00AM","11:00AM","12:00PM","01:00PM","02:00PM","03:00PM","04:00PM"];
-  return days[Math.floor(Math.random()*days.length)] + ' ' + hours[Math.floor(Math.random()*hours.length)];
+  const days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const hours=['08:00AM','09:00AM','10:00AM','11:00AM','12:00PM','01:00PM','02:00PM','03:00PM','04:00PM'];
+  return days[Math.floor(Math.random()*days.length)]+' '+hours[Math.floor(Math.random()*hours.length)];
 }
-
-let doctors = [
-  {id:101, name:"أبرام فادي", spec:"قلب", price:250, time:randomTime()},
-  {id:102, name:"عمرو حسني", spec:"باطنة", price:200, time:randomTime()},
-  {id:103, name:"محمد صبحي", spec:"عظام", price:300, time:randomTime()},
-  {id:104, name:"عبد الله علي", spec:"جلدية", price:180, time:randomTime()},
-  {id:105, name:"محمد", spec:"مخ وأعصاب", price:350, time:randomTime()}
+let doctors=[
+  {id:101,name:"أبرام فادي",spec:"قلب",price:250,time:randomTime()},
+  {id:102,name:"عمرو حسني",spec:"باطنة",price:200,time:randomTime()},
+  {id:103,name:"محمد صبحي",spec:"عظام",price:300,time:randomTime()},
+  {id:104,name:"عبد الله علي",spec:"جلدية",price:180,time:randomTime()},
+  {id:105,name:"محمد",spec:"مخ وأعصاب",price:350,time:randomTime()}
 ];
-let patients = [];
-let invoices = [];
-let medicines = [
-  {name:"Panadol", price:25},
-  {name:"Vitamin C", price:15},
-  {name:"Brufen", price:22},
-  {name:"Aspirin", price:12.5},
-  {name:"Augmentin", price:55},
-  {name:"Zinc", price:18}
+let patients=[];
+let invoices=[];
+let medicines=[
+  {name:"Panadol",price:25},
+  {name:"Vitamin C",price:15},
+  {name:"Brufen",price:22},
+  {name:"Aspirin",price:12.5},
+  {name:"Augmentin",price:55},
+  {name:"Zinc",price:18}
 ];
-
 function render(){
-  doctorsTable.innerHTML = `<tr><th>الاسم</th><th>التخصص</th><th>السعر</th><th>ميعاد</th><th></th></tr>` +
-    doctors.map(d=>`<tr><td>${d.name}</td><td>${d.spec}</td><td>${d.price}</td><td>${d.time}</td><td><button class='btn btn-danger' onclick='deleteDoctor(${d.id})'>حذف</button></td></tr>`).join('');
-  patientsTable.innerHTML = `<tr><th>ID</th><th>الاسم</th><th>السن</th><th></th></tr>` +
-    patients.map(p=>`<tr><td>${p.id}</td><td>${p.name}</td><td>${p.age}</td><td><button class='btn btn-danger' onclick='deletePatient(${p.id})'>حذف</button></td></tr>`).join('');
-  patientSelect.innerHTML = patients.map(p=>`<option value='${p.id}'>${p.name} - ${p.age} سنة</option>`).join('');
-  doctorSelect.innerHTML = doctors.map(d=>`<option value='${d.id}'>${d.name} - ${d.price} جنيه - ${d.time}</option>`).join('');
+  doctorsTable.innerHTML=`<tr><th>الاسم</th><th>التخصص</th><th>السعر</th><th>ميعاد</th><th></th></tr>`+doctors.map(d=>`<tr><td>${d.name}</td><td>${d.spec}</td><td>${d.price}</td><td>${d.time}</td><td><button class='btn btn-danger' onclick='deleteDoctor(${d.id})'>حذف</button></td></tr>`).join('');
+  patientsTable.innerHTML=`<tr><th>ID</th><th>الاسم</th><th>السن</th><th></th></tr>`+patients.map(p=>`<tr><td>${p.id}</td><td>${p.name}</td><td>${p.age}</td><td><button class='btn btn-danger' onclick='deletePatient(${p.id})'>حذف</button></td></tr>`).join('');
+  patientSelect.innerHTML=patients.map(p=>`<option value='${p.id}'>${p.name} - ${p.age} سنة</option>`).join('');
+  doctorSelect.innerHTML=doctors.map(d=>`<option value='${d.id}'>${d.name} - ${d.spec} - ${d.price} جنيه - ${d.time}</option>`).join('');
 
-  let billingGrid = document.getElementById('billingMedsGrid');
-  billingGrid.innerHTML = medicines.map(m=>`<div class='med-item' data-name='${m.name}' data-price='${m.price}' onclick='selectMed(this)'>💊 ${m.name} (${m.price})</div>`).join('');
+  let billingGrid=document.getElementById('billingMedsGrid');
+  billingGrid.innerHTML=medicines.map(m=>`<div class='med-item' data-name='${m.name}' data-price='${m.price}' onclick='selectMed(this)'>💊 ${m.name} (${m.price})</div>`).join('');
 
-  let invoicesDiv = document.getElementById('invoices');
-  invoicesDiv.innerHTML = invoices.map(inv=>{
-    return `<div class='invoice'><strong>رقم الفاتورة:</strong> ${inv.id}<br><strong>المريض:</strong> ${inv.patient}<br><strong>الدكتور:</strong> ${inv.doctor} (${inv.doctorTime})<br><strong>الأدوية:</strong> ${inv.meds.map(m=>m.name).join(', ')}<br><strong>الإجمالي:</strong> ${inv.total} جنيه</div>`;
-  }).join('');
+  invoicesDiv=document.getElementById('invoices');
+  invoicesDiv.innerHTML=invoices.map(inv=>`<div class='invoice'><strong>رقم الفاتورة:</strong> ${inv.id}<br><strong>المريض:</strong> ${inv.patient}<br><strong>الدكتور:</strong> ${inv.doctor} - ${inv.doctorSpec} - ${inv.doctorTime}<br><strong>الأدوية:</strong> ${inv.meds.map(m=>m.name).join(', ')}<br><strong>الإجمالي:</strong> ${inv.total} جنيه</div>`).join('');
 }
-
-function addDoctor(){doctors.push({id:Date.now(), name:dName.value, spec:dSpec.value, price:+dPrice.value, time:randomTime()}); dName.value=dSpec.value=dPrice.value=''; render();}
-function deleteDoctor(id){doctors = doctors.filter(d=>d.id!==id); render();}
-function addPatient(){patients.push({id:Date.now(), name:pName.value, age:+pAge.value}); pName.value=pAge.value=''; render();}
-function deletePatient(id){patients = patients.filter(p=>p.id!==id); render();}
-function selectMed(el){
-  let medInfo = document.getElementById('medInfo');
-  medInfo.innerHTML = `دواء: ${el.dataset.name} <br>السعر: ${el.dataset.price} جنيه`;
-  el.classList.toggle('selected');
-}
+function addDoctor(){doctors.push({id:Date.now(),name:dName.value,spec:dSpec.value,price:+dPrice.value,time:randomTime()});dName.value=dSpec.value=dPrice.value='';render();}
+function deleteDoctor(id){doctors=doctors.filter(d=>d.id!==id);render();}
+function addPatient(){patients.push({id:Date.now(),name:pName.value,age:+pAge.value});pName.value=pAge.value='';render();}
+function deletePatient(id){patients=patients.filter(p=>p.id!==id);render();}
+function selectMed(el){el.classList.toggle('selected');document.getElementById('medInfo').innerHTML=`دواء: ${el.dataset.name} <br>السعر: ${el.dataset.price} جنيه`;}
 function createInvoice(){
-  let patient = patients.find(p=>p.id==patientSelect.value);
-  let doctor = doctors.find(d=>d.id==doctorSelect.value);
-  if(!patient || !doctor) { alert('اختر المريض والدكتور'); return; }
-  let selectedMeds = Array.from(document.querySelectorAll('#billingMedsGrid .med-item.selected')).map(m=>({name:m.dataset.name, price:+m.dataset.price}));
-  let total = doctor.price + selectedMeds.reduce((sum,m)=>sum+m.price,0);
-  let invoice = {id:Date.now(), patient:patient.name, doctor:doctor.name, doctorTime:doctor.time, meds:selectedMeds, total:total};
-  invoices.push(invoice);
+  let patient=patients.find(p=>p.id==patientSelect.value);
+  let doctor=doctors.find(d=>d.id==doctorSelect.value);
+  if(!patient||!doctor){alert('اختر المريض والدكتور');return;}
+  let selectedMeds=Array.from(document.querySelectorAll('#billingMedsGrid .med-item.selected')).map(m=>({name:m.dataset.name,price:+m.dataset.price}));
+  let total=doctor.price+selectedMeds.reduce((sum,m)=>sum+m.price,0);
+  invoices.push({id:Date.now(),patient:patient.name,doctor:doctor.name,doctorSpec:doctor.spec,doctorTime:doctor.time,meds:selectedMeds,total:total});
   render();
 }
-
 btnDoctors.onclick=()=>showSection('doctors',btnDoctors);
 btnPatients.onclick=()=>showSection('patients',btnPatients);
 btnPharmacy.onclick=()=>showSection('pharmacy',btnPharmacy);
 btnBilling.onclick=()=>showSection('billing',btnBilling);
-function showSection(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active'); render();}
-
+function showSection(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
 render();
 </script>
 </body>
