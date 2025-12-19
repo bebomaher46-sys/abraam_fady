@@ -1,17 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <title>Oust Hospital System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{margin:0;font-family:'Segoe UI',Tahoma;background:#eef3f7;display:flex;height:100vh}
+body{margin:0;font-family:'Segoe UI',Tahoma;background:#eef3f7;display:flex;flex-direction:column;min-height:100vh}
 .sidebar{width:260px;background:#0f2027;color:#fff;padding:20px;display:flex;flex-direction:column;flex-shrink:0}
 .sidebar h2{text-align:center;color:#00d2ff}
 .menu-btn{background:none;border:none;color:#ddd;padding:12px;text-align:right;border-radius:6px;margin-bottom:8px;font-size:1em;cursor:pointer}
 .menu-btn.active,.menu-btn:hover{background:rgba(255,255,255,.15);color:#00d2ff}
-.content{flex:1;padding:25px;overflow:auto}
-.section{display:none;background:#fff;padding:25px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,.1)}
+.content{flex:1;padding:15px;overflow:auto}
+.section{display:none;background:#fff;padding:15px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,.1)}
 .section.active{display:block}
 h1{border-bottom:3px solid #00d2ff;display:inline-block}
 input,select{width:100%;padding:10px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px}
@@ -25,6 +25,18 @@ th{background:#0f2027;color:#fff}
 .meds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .med-item{border:1px solid #ccc;padding:10px;border-radius:10px;text-align:center;background:#f9faff;transition:0.2s;cursor:pointer}
 .med-item:hover{background:#d6f0ff;transform:translateY(-3px)}
+
+/* Responsive */
+@media (min-width: 768px) {
+  body{flex-direction:row}
+  .content{padding:25px}
+}
+@media (max-width: 767px) {
+  .sidebar{width:100%;flex-direction:row;overflow-x:auto}
+  .menu-btn{flex:1;white-space:nowrap;margin-right:5px}
+  .content{padding:10px}
+  table, .meds-grid{font-size:14px}
+}
 </style>
 </head>
 <body>
