@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Oust Hospital System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>
 body{margin:0;font-family:'Segoe UI',Tahoma;background:#eef3f7;display:flex;flex-direction:column;min-height:100vh}
 .sidebar{width:260px;background:#0f2027;color:#fff;padding:20px;display:flex;flex-direction:column;flex-shrink:0}
@@ -24,19 +24,11 @@ th{background:#0f2027;color:#fff}
 .invoice{border:2px dashed #00d2ff;padding:15px;margin-top:15px;border-radius:10px}
 .meds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .med-item{border:1px solid #ccc;padding:10px;border-radius:10px;text-align:center;background:#f9faff;transition:0.2s;cursor:pointer}
-.med-item:hover{background:#d6f0ff;transform:translateY(-3px)}
-
+.selected{background:#a0e7ff}
+.med-info{margin-top:10px;padding:10px;border:1px dashed #00d2ff;border-radius:10px;background:#f0fcff}
 /* Responsive */
-@media (min-width: 768px) {
-  body{flex-direction:row}
-  .content{padding:25px}
-}
-@media (max-width: 767px) {
-  .sidebar{width:100%;flex-direction:row;overflow-x:auto}
-  .menu-btn{flex:1;white-space:nowrap;margin-right:5px}
-  .content{padding:10px}
-  table, .meds-grid{font-size:14px}
-}
+@media (min-width: 768px) {body{flex-direction:row}.content{padding:25px}}
+@media (max-width: 767px) {.sidebar{width:100%;flex-direction:row;overflow-x:auto}.menu-btn{flex:1;white-space:nowrap;margin-right:5px}.content{padding:10px}table,.meds-grid{font-size:14px}}
 </style>
 </head>
 <body>
@@ -65,97 +57,94 @@ th{background:#0f2027;color:#fff}
 </div>
 <div id="pharmacy" class="section">
 <h1>إدارة الصيدلية</h1>
-<input id="mName" placeholder="اسم الدواء">
-<input id="mPrice" type="number" placeholder="سعر الدواء">
-<input id="mQty" type="number" placeholder="الكمية">
-<button class="btn btn-success" onclick="addMedicine()">إضافة دواء</button>
-<table id="medsTable"></table>
+<div id="medsGrid" class="meds-grid">
+<div class="med-item" data-name="Panadol" data-price="25">💊 Panadol (25)</div>
+<div class="med-item" data-name="Vitamin C" data-price="15">💊 Vitamin C (15)</div>
+<div class="med-item" data-name="Brufen" data-price="22">💊 Brufen (22)</div>
+<div class="med-item" data-name="Aspirin" data-price="12.5">💊 Aspirin (12.5)</div>
+<div class="med-item" data-name="Augmentin" data-price="55">💊 Augmentin (55)</div>
+<div class="med-item" data-name="Zinc" data-price="18">💊 Zinc (18)</div>
+</div>
 </div>
 <div id="billing" class="section">
 <h1>إنشاء فاتورة</h1>
 <select id="patientSelect"></select>
 <select id="doctorSelect"></select>
 <h3>اختيار الأدوية</h3>
-<div id="medsGrid" class="meds-grid"></div>
+<div id="billingMedsGrid" class="meds-grid"></div>
+<div id="medInfo" class="med-info">اختر دواء لعرض التفاصيل هنا</div>
 <button class="btn btn-success" onclick="createInvoice()">إنشاء فاتورة</button>
 <div id="invoices"></div>
 </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-let doctors=JSON.parse(localStorage.getItem('doctors'))||[];
-let patients=JSON.parse(localStorage.getItem('patients'))||[];
-let medicines=JSON.parse(localStorage.getItem('medicines'))||[];
-let invoices=JSON.parse(localStorage.getItem('invoices'))||[];
-
-function save(){
- localStorage.setItem('doctors',JSON.stringify(doctors));
- localStorage.setItem('patients',JSON.stringify(patients));
- localStorage.setItem('medicines',JSON.stringify(medicines));
- localStorage.setItem('invoices',JSON.stringify(invoices));
+function randomTime(){
+  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const hours = ["08:00AM","09:00AM","10:00AM","11:00AM","12:00PM","01:00PM","02:00PM","03:00PM","04:00PM"];
+  return days[Math.floor(Math.random()*days.length)] + ' ' + hours[Math.floor(Math.random()*hours.length)];
 }
 
-function switchSection(sectionId, btn){
- document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
- document.getElementById(sectionId).classList.add('active');
- document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
- btn.classList.add('active');
- render();
-}
-
-document.getElementById('btnDoctors').addEventListener('click', ()=>switchSection('doctors', document.getElementById('btnDoctors')));
-document.getElementById('btnPatients').addEventListener('click', ()=>switchSection('patients', document.getElementById('btnPatients')));
-document.getElementById('btnPharmacy').addEventListener('click', ()=>switchSection('pharmacy', document.getElementById('btnPharmacy')));
-document.getElementById('btnBilling').addEventListener('click', ()=>switchSection('billing', document.getElementById('btnBilling')));
-
-function addDoctor(){if(!dName.value||!dSpec.value||!dPrice.value) return alert('اكمل البيانات'); doctors.push({id:Date.now(),name:dName.value,spec:dSpec.value,price:+dPrice.value}); dName.value=dSpec.value=dPrice.value=''; save(); render();}
-function addPatient(){if(!pName.value||!pAge.value) return alert('اكمل البيانات'); patients.push({id:Date.now(),name:pName.value,age:+pAge.value}); pName.value=pAge.value=''; save(); render();}
-function addMedicine(){if(!mName.value||!mPrice.value||!mQty.value) return alert('اكمل البيانات'); medicines.push({id:Date.now(),name:mName.value,price:+mPrice.value,qty:+mQty.value}); mName.value=mPrice.value=mQty.value=''; save(); render();}
-
-function createInvoice(){
- let p=patients.find(p=>p.id==patientSelect.value);
- let d=doctors.find(d=>d.id==doctorSelect.value);
- if(!p||!d) return alert('اختر المريض والدكتور');
- let selectedMeds=[]; let total=d.price;
- document.querySelectorAll('.med-item input:checked').forEach(c=>{
-   let med=medicines.find(m=>m.id==c.value);
-   if(med && med.qty>0){med.qty--; selectedMeds.push(med.name); total+=med.price;}
- });
- let inv={id:Date.now(),patient:p.name,doctor:d.name,meds:selectedMeds,total,date:new Date().toLocaleString()};
- invoices.push(inv); save(); render();
-}
-
-function generateInvoicePDF(inv){
- const { jsPDF } = window.jspdf;
- const doc = new jsPDF();
- doc.setFontSize(16);
- doc.text('فاتورة مستشفى Oust', 105, 20, null, null, 'center');
- doc.setFontSize(12);
- doc.text(`التاريخ: ${inv.date}`, 14, 35);
- doc.text(`المريض: ${inv.patient}`, 14, 45);
- doc.text(`الدكتور: ${inv.doctor}`, 14, 55);
- let y = 65;
- inv.meds.forEach((m,i)=>{doc.text(`${i+1}- ${m}`,14,y); y+=10});
- doc.text(`الإجمالي: ${inv.total} جنيه`,14,y+10);
- doc.save(`Invoice_${inv.id}.pdf`);
-}
+let doctors = [
+  {id:101, name:"أبرام فادي", spec:"قلب", price:250, time:randomTime()},
+  {id:102, name:"عمرو حسني", spec:"باطنة", price:200, time:randomTime()},
+  {id:103, name:"محمد صبحي", spec:"عظام", price:300, time:randomTime()},
+  {id:104, name:"عبد الله علي", spec:"جلدية", price:180, time:randomTime()},
+  {id:105, name:"محمد", spec:"مخ وأعصاب", price:350, time:randomTime()}
+];
+let patients = [];
+let invoices = [];
+let medicines = [
+  {name:"Panadol", price:25},
+  {name:"Vitamin C", price:15},
+  {name:"Brufen", price:22},
+  {name:"Aspirin", price:12.5},
+  {name:"Augmentin", price:55},
+  {name:"Zinc", price:18}
+];
 
 function render(){
- doctorsTable.innerHTML='<tr><th>الاسم</th><th>التخصص</th><th>السعر</th></tr>'+doctors.map(d=>`<tr><td>${d.name}</td><td>${d.spec}</td><td>${d.price}</td></tr>`).join('');
- patientsTable.innerHTML='<tr><th>الاسم</th><th>السن</th></tr>'+patients.map(p=>`<tr><td>${p.name}</td><td>${p.age}</td></tr>`).join('');
- medsTable.innerHTML='<tr><th>الدواء</th><th>السعر</th><th>الكمية</th></tr>'+medicines.map(m=>`<tr><td>${m.name}</td><td>${m.price}</td><td>${m.qty}</td></tr>`).join('');
- patientSelect.innerHTML=patients.map(p=>`<option value='${p.id}'>${p.name}</option>`).join('');
- doctorSelect.innerHTML=doctors.map(d=>`<option value='${d.id}'>${d.name}</option>`).join('');
- medsGrid.innerHTML=medicines.map(m=>`<div class='med-item'><label><input type='checkbox' value='${m.id}'> ${m.name} (${m.price})</label></div>`).join('');
- invoicesDiv.innerHTML=invoices.map(i=>`<div class='invoice'><b>المريض:</b> ${i.patient}<br><b>الدكتور:</b> ${i.doctor}<br><b>الأدوية:</b> ${i.meds.join(', ')||'لا يوجد'}<br><b>الإجمالي:</b> ${i.total} جنيه<br><b>التاريخ:</b> ${i.date}<br><button class='btn btn-success' onclick='generateInvoicePDF(${i.id})'>طباعة الفاتورة</button></div>`).join('');
+  doctorsTable.innerHTML = `<tr><th>الاسم</th><th>التخصص</th><th>السعر</th><th>ميعاد</th><th></th></tr>` +
+    doctors.map(d=>`<tr><td>${d.name}</td><td>${d.spec}</td><td>${d.price}</td><td>${d.time}</td><td><button class='btn btn-danger' onclick='deleteDoctor(${d.id})'>حذف</button></td></tr>`).join('');
+  patientsTable.innerHTML = `<tr><th>ID</th><th>الاسم</th><th>السن</th><th></th></tr>` +
+    patients.map(p=>`<tr><td>${p.id}</td><td>${p.name}</td><td>${p.age}</td><td><button class='btn btn-danger' onclick='deletePatient(${p.id})'>حذف</button></td></tr>`).join('');
+  patientSelect.innerHTML = patients.map(p=>`<option value='${p.id}'>${p.name} - ${p.age} سنة</option>`).join('');
+  doctorSelect.innerHTML = doctors.map(d=>`<option value='${d.id}'>${d.name} - ${d.price} جنيه - ${d.time}</option>`).join('');
 
- invoices.forEach(inv=>{
-   let btn = document.querySelector(`.invoice button[onclick='generateInvoicePDF(${inv.id})']`);
-   if(btn) btn.onclick = () => generateInvoicePDF(inv);
- });
+  let billingGrid = document.getElementById('billingMedsGrid');
+  billingGrid.innerHTML = medicines.map(m=>`<div class='med-item' data-name='${m.name}' data-price='${m.price}' onclick='selectMed(this)'>💊 ${m.name} (${m.price})</div>`).join('');
+
+  let invoicesDiv = document.getElementById('invoices');
+  invoicesDiv.innerHTML = invoices.map(inv=>{
+    return `<div class='invoice'><strong>رقم الفاتورة:</strong> ${inv.id}<br><strong>المريض:</strong> ${inv.patient}<br><strong>الدكتور:</strong> ${inv.doctor} (${inv.doctorTime})<br><strong>الأدوية:</strong> ${inv.meds.map(m=>m.name).join(', ')}<br><strong>الإجمالي:</strong> ${inv.total} جنيه</div>`;
+  }).join('');
 }
 
-let invoicesDiv=document.getElementById('invoices');
+function addDoctor(){doctors.push({id:Date.now(), name:dName.value, spec:dSpec.value, price:+dPrice.value, time:randomTime()}); dName.value=dSpec.value=dPrice.value=''; render();}
+function deleteDoctor(id){doctors = doctors.filter(d=>d.id!==id); render();}
+function addPatient(){patients.push({id:Date.now(), name:pName.value, age:+pAge.value}); pName.value=pAge.value=''; render();}
+function deletePatient(id){patients = patients.filter(p=>p.id!==id); render();}
+function selectMed(el){
+  let medInfo = document.getElementById('medInfo');
+  medInfo.innerHTML = `دواء: ${el.dataset.name} <br>السعر: ${el.dataset.price} جنيه`;
+  el.classList.toggle('selected');
+}
+function createInvoice(){
+  let patient = patients.find(p=>p.id==patientSelect.value);
+  let doctor = doctors.find(d=>d.id==doctorSelect.value);
+  if(!patient || !doctor) { alert('اختر المريض والدكتور'); return; }
+  let selectedMeds = Array.from(document.querySelectorAll('#billingMedsGrid .med-item.selected')).map(m=>({name:m.dataset.name, price:+m.dataset.price}));
+  let total = doctor.price + selectedMeds.reduce((sum,m)=>sum+m.price,0);
+  let invoice = {id:Date.now(), patient:patient.name, doctor:doctor.name, doctorTime:doctor.time, meds:selectedMeds, total:total};
+  invoices.push(invoice);
+  render();
+}
+
+btnDoctors.onclick=()=>showSection('doctors',btnDoctors);
+btnPatients.onclick=()=>showSection('patients',btnPatients);
+btnPharmacy.onclick=()=>showSection('pharmacy',btnPharmacy);
+btnBilling.onclick=()=>showSection('billing',btnBilling);
+function showSection(id,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active'); render();}
+
 render();
 </script>
 </body>
