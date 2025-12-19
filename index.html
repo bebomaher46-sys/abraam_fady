@@ -74,6 +74,7 @@ th{background:#0f2027;color:#fff}
 <h3>اختيار الأدوية</h3>
 <div id="billingMedsGrid" class="meds-grid"></div>
 <button class="btn btn-success" onclick="createInvoice()">إنشاء فاتورة</button>
+<button class="btn btn-danger" onclick="deleteAllInvoices()">حذف جميع الفواتير</button>
 <div id="invoices"></div>
 </div>
 </div>
@@ -110,7 +111,7 @@ function render(){
   billingGrid.innerHTML=medicines.map(m=>`<div class='med-item' data-name='${m.name}' data-price='${m.price}' onclick='selectMed(this)'>💊 ${m.name} (${m.price})</div>`).join('');
 
   invoicesDiv=document.getElementById('invoices');
-  invoicesDiv.innerHTML=invoices.map(inv=>`<div class='invoice'><strong>رقم الفاتورة:</strong> ${inv.id}<br><strong>المريض:</strong> ${inv.patient}<br><strong>الدكتور:</strong> ${inv.doctor} - ${inv.doctorSpec} - ${inv.doctorTime}<br><strong>الأدوية:</strong> ${inv.meds.map(m=>m.name).join(', ')}<br><strong>الإجمالي:</strong> ${inv.total} جنيه</div>`).join('');
+  invoicesDiv.innerHTML=invoices.map(inv=>`<div class='invoice'><strong>رقم الفاتورة:</strong> ${inv.id}<br><strong>المريض:</strong> ${inv.patient}<br><strong>الدكتور:</strong> ${inv.doctor} - ${inv.doctorSpec} - ${inv.doctorTime}<br><strong>الأدوية:</strong> ${inv.meds.map(m=>m.name).join(', ')}<br><strong>الإجمالي:</strong> ${inv.total} جنيه<br><button class='btn btn-danger' onclick='deleteInvoice(${inv.id})'>حذف الفاتورة</button></div>`).join('');
 }
 function addDoctor(){doctors.push({id:Date.now(),name:dName.value,spec:dSpec.value,price:+dPrice.value,time:randomTime()});dName.value=dSpec.value=dPrice.value='';render();}
 function deleteDoctor(id){doctors=doctors.filter(d=>d.id!==id);render();}
@@ -126,6 +127,8 @@ function createInvoice(){
   invoices.push({id:Date.now(),patient:patient.name,doctor:doctor.name,doctorSpec:doctor.spec,doctorTime:doctor.time,meds:selectedMeds,total:total});
   render();
 }
+function deleteInvoice(id){if(confirm('هل أنت متأكد من حذف هذه الفاتورة؟')){invoices=invoices.filter(inv=>inv.id!==id);render();}}
+function deleteAllInvoices(){if(confirm('هل أنت متأكد من حذف جميع الفواتير؟')){invoices=[];render();}}
 btnDoctors.onclick=()=>showSection('doctors',btnDoctors);
 btnPatients.onclick=()=>showSection('patients',btnPatients);
 btnPharmacy.onclick=()=>showSection('pharmacy',btnPharmacy);
